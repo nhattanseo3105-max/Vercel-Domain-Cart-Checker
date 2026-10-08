@@ -21,12 +21,12 @@ import time
 _cached_tlds = None
 _cached_uk = None
 _cache_time = 0
-CACHE_TTL = 60  # 60 seconds cache
+CACHE_TTL = 3600  # 1 hour cache (or until Vercel shuts down the instance)
 
-def load_banned_tlds() -> Tuple[Dict[str, Set[str]], bool]:
+def load_banned_tlds(force: bool = False) -> Tuple[Dict[str, Set[str]], bool]:
     global _cached_tlds, _cached_uk, _cache_time
     
-    if _cached_tlds is not None and (time.time() - _cache_time) < CACHE_TTL:
+    if not force and _cached_tlds is not None and (time.time() - _cache_time) < CACHE_TTL:
         return _cached_tlds, _cached_uk
 
     try:

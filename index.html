@@ -453,6 +453,7 @@
       <button class="btn btn-sm btn-red" id="banRemove" disabled>Xóa dòng đang chọn</button>
     </div>
     <div class="actions">
+      <button class="btn btn-sm btn-green" id="banRefresh" style="background-color:#10b981; margin-right:8px;">🔄 Tải lại từ GitHub</button>
       <button class="btn btn-sm btn-slate" id="banReset" disabled>Đặt lại mặc định</button>
       <button class="btn btn-sm btn-sky" id="banClose">Đóng</button>
     </div>
@@ -805,6 +806,24 @@ async function loadBanned() {
 }
 
 let banState = null;
+
+
+$("#banRefresh").addEventListener("click", async () => {
+  const btn = $("#banRefresh");
+  btn.textContent = "Đang tải...";
+  btn.disabled = true;
+  try {
+    const res = await fetch("/api/banned/refresh", { method: "POST" });
+    banState = await res.json();
+    $("#ukPure").checked = !!banState.uk_pure_banned;
+    refreshBanList();
+    toast("Đã cập nhật dữ liệu từ GitHub");
+  } catch(e) {
+    toast("Lỗi cập nhật");
+  }
+  btn.textContent = "🔄 Tải lại từ GitHub";
+  btn.disabled = false;
+});
 
 async function openBannedModal() {
   try {
