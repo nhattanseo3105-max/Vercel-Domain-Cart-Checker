@@ -4,7 +4,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from core import process, result_summary, parse_original_list, parse_cart, compare, output_command_2, app = Flask(__name__)
+from core import process, result_summary, parse_original_list, parse_cart, compare, output_command_2
+
+app = Flask(__name__)
 CORS(app)
 
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'OPTIONS'])
