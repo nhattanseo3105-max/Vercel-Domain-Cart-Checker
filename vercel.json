@@ -1,7 +1,7 @@
 {
   "rewrites": [
     { "source": "/", "destination": "/public/index.html" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/api/(.*)", "destination": "/api/index.py" },
     { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }
