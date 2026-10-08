@@ -4,13 +4,17 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from core import process, result_summary, parse_original_list, parse_cart, compare, output_command_2, load_banned_tlds
+from core import process, result_summary, parse_original_list, parse_cart, compare, output_command_2
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/api/run', methods=['POST'])
-def run_command():
+@app.route('/', defaults={'path': ''}, methods=['POST', 'OPTIONS'])
+@app.route('/<path:path>', methods=['POST', 'OPTIONS'])
+def run_command(path):
+    if request.method == 'OPTIONS':
+        return '', 204
+        
     try:
         data = request.get_json() or {}
         original = str(data.get("original", ""))
@@ -50,26 +54,3 @@ def run_command():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-@app.route('/api/banned', methods=['GET'])
-def get_banned():
-    try:
-        banned_tlds, uk_pure_banned = load_banned_tlds()
-        return jsonify({
-            "banned_tlds": {
-                k: sorted(list(v)) for k, v in banned_tlds.items()
-            },
-            "uk_pure_banned": uk_pure_banned,
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/banned', methods=['POST'])
-def post_banned():
-    return jsonify({"error": "Chế độ Vercel không cho phép lưu thay đổi. Vui lòng sửa trực tiếp trên GitHub."}), 403
-
-@app.route('/api/banned/reset', methods=['POST'])
-def reset_banned():
-    return jsonify({"error": "Chế độ Vercel không cho phép lưu thay đổi."}), 403
-
-# Vercel needs the app object to be exported or defined at module level.
