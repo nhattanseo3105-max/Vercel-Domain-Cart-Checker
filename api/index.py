@@ -4,19 +4,32 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from core import process, result_summary, parse_original_list, parse_cart, compare, output_command_2
+from core import process, result_summary, parse_original_list, parse_cart, compare, output_command_2, load_banned_tlds
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/', defaults={'path': ''}, methods=['POST', 'OPTIONS'])
-@app.route('/<path:path>', methods=['POST', 'OPTIONS'])
-def run_command(path):
+@app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'OPTIONS'])
+@app.route('/<path:path>', methods=['GET', 'POST', 'OPTIONS'])
+def catch_all(path):
     if request.method == 'OPTIONS':
         return '', 204
-        
+
+    if request.method == 'POST':
+        # Phân loại dựa trên payload (vì Vercel rewrite có thể làm mất đường dẫn gốc)
+        data = request.get_json(silent=True) or {}
+        if 'command' in data:
+            return handle_run(data)
+        else:
+            return jsonify({"error": "Chế độ Vercel không cho phép lưu thay đổi cấu hình. Vui lòng sửa trực tiếp file banned_tlds.json trên kho lưu trữ GitHub."}), 403
+
+    if request.method == 'GET':
+        return handle_banned_get()
+
+    return jsonify({"error": "Method not allowed"}), 405
+
+def handle_run(data):
     try:
-        data = request.get_json() or {}
         original = str(data.get("original", ""))
         cart = str(data.get("cart", ""))
         command = str(data.get("command", ""))
@@ -51,6 +64,18 @@ def run_command(path):
             "provider": provider,
             "domains": domains,
             "ds_import": ds_import,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def handle_banned_get():
+    try:
+        banned_tlds, uk_pure_banned = load_banned_tlds()
+        return jsonify({
+            "banned_tlds": {
+                k: sorted(list(v)) for k, v in banned_tlds.items()
+            },
+            "uk_pure_banned": uk_pure_banned,
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
