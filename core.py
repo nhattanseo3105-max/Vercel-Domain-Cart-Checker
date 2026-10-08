@@ -16,7 +16,19 @@ DEFAULT_BANNED_TLDS = {
 }
 DEFAULT_UK_PURE_BANNED = True
 
+import time
+
+_cached_tlds = None
+_cached_uk = None
+_cache_time = 0
+CACHE_TTL = 60  # 60 seconds cache
+
 def load_banned_tlds() -> Tuple[Dict[str, Set[str]], bool]:
+    global _cached_tlds, _cached_uk, _cache_time
+    
+    if _cached_tlds is not None and (time.time() - _cache_time) < CACHE_TTL:
+        return _cached_tlds, _cached_uk
+
     try:
         response = requests.get(GITHUB_BANNED_TLDS_URL, timeout=5)
         if response.status_code == 200:
@@ -28,9 +40,17 @@ def load_banned_tlds() -> Tuple[Dict[str, Set[str]], bool]:
                 if cat not in tlds:
                     tlds[cat] = set()
             uk = bool(data.get("uk_pure_banned", DEFAULT_UK_PURE_BANNED))
+            
+            _cached_tlds = tlds
+            _cached_uk = uk
+            _cache_time = time.time()
             return tlds, uk
     except Exception as e:
         print(f"Error loading banned TLDs from GitHub: {e}")
+        
+    if _cached_tlds is not None:
+        return _cached_tlds, _cached_uk
+        
     return copy.deepcopy(DEFAULT_BANNED_TLDS), DEFAULT_UK_PURE_BANNED
 
 # ==================== DATA MODELS ====================
