@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Domain Cart Checker • SEO Tool</title>
+<link rel="icon" href="https://cms.spidyhost.com/uploads/free_domain_management_6d99a63d6a.svg" type="image/svg+xml" />
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
+    --primary: #3b82f6;
+    --primary-h: #2563eb;
+    --green: #10b981;
+    --green-h: #059669;
+    --red: #ef4444;
+    --red-h: #dc2626;
+    --violet: #7c3aed;
+    --violet-h: #6d28d9;
+    --sky: #0ea5e9;
+    --sky-h: #0284c7;
+    --purple: #a855f7;
+    --purple-h: #9333ea;
+    --slate: #64748b;
+    --slate-h: #475569;
+    --ok: #16a34a;
+    --warn: #ea580c;
+    --err: #dc2626;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(15,23,42,.08), 0 4px 12px rgba(15,23,42,.04);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .app {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100vh;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+  header {
+    grid-column: 1 / -1;
+    padding: 16px 20px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 1.45rem;
+    font-weight: 700;
+  }
+  header .badge {
+    font-size: .75rem;
+    color: var(--muted);
+    background: #e2e8f0;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .sidebar {
+    padding: 8px 12px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .side-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .side-card h2 {
+    margin: 0 0 4px;
+    font-size: .95rem;
+    font-weight: 700;
+  }
+  label.field {
+    font-size: .8rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  select, input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: .9rem;
+    background: #fff;
+    color: var(--text);
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: 2px solid #93c5fd;
+    border-color: var(--primary);
+  }
+  .btn {
+    display: block;
+    width: 100%;
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: .9rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: opacity .15s, transform .08s;
+  }
+  .btn:hover { opacity: .92; }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-violet { background: var(--violet); }
+  .btn-violet:hover { background: var(--violet-h); }
+  .btn-sky { background: var(--sky); }
+  .btn-sky:hover { background: var(--sky-h); }
+  .btn-green { background: var(--green); }
+  .btn-green:hover { background: var(--green-h); }
+  .btn-purple { background: var(--purple); }
+  .btn-purple:hover { background: var(--purple-h); }
+  .btn-red { background: var(--red); }
+  .btn-red:hover { background: var(--red-h); }
+  .btn-slate { background: var(--slate); }
+  .btn-slate:hover { background: var(--slate-h); }
+  .btn-orange { background: #ea580c; }
+  .btn-orange:hover { background: #c2410c; }
+  .btn-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    padding: 7px 12px;
+    font-size: .85rem;
+  }
+  .main {
+    padding: 8px 16px 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    flex: 1;
+    min-height: 260px;
+  }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .panel-head {
+    padding: 10px 14px 6px;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel textarea {
+    flex: 1;
+    width: 100%;
+    border: 0;
+    resize: none;
+    padding: 8px 14px 14px;
+    font-family: Consolas, "Cascadia Code", monospace;
+    font-size: .9rem;
+    line-height: 1.45;
+    color: var(--text);
+    background: transparent;
+    min-height: 200px;
+  }
+  .check-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 12px 16px;
+  }
+  .check-card h3 {
+    margin: 0 0 8px;
+    font-size: .95rem;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    align-items: baseline;
+    padding: 4px 0;
+    font-size: .92rem;
+  }
+  .row .label { color: var(--muted); font-weight: 600; min-width: 110px; flex-shrink: 0; }
+  .row .value { font-weight: 600; word-break: break-word; flex: 1; min-width: 0; }
+  .icon { font-weight: 700; margin-left: 4px; }
+  .icon.ok { color: var(--ok); }
+  .icon.err { color: var(--err); }
+  .icon.warn { color: var(--warn); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    background: #fee2e2;
+    color: #b91c1c;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: .82rem;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+  }
+  .chip:hover { background: #fecaca; }
+  .chip.copied {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+  .btn-copy-missing {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 6px;
+    padding: 3px 10px;
+    font-size: .78rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--sky);
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .btn-copy-missing:hover { background: var(--sky-h); }
+  .btn-copy-missing:active { transform: scale(.97); }
+  .warn-line {
+    margin-top: 6px;
+    color: var(--err);
+    font-size: .85rem;
+    font-weight: 600;
+  }
+  .result-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    min-height: 220px;
+    flex: 1;
+  }
+  .result-head {
+    padding: 10px 14px 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .result-head span { font-size: .9rem; font-weight: 600; }
+  #result {
+    flex: 1;
+    width: 100%;
+    border: 0;
+    resize: none;
+    padding: 8px 14px 14px;
+    font-family: Consolas, "Cascadia Code", monospace;
+    font-size: .9rem;
+    line-height: 1.45;
+    min-height: 180px;
+  }
+  footer {
+    grid-column: 1 / -1;
+    padding: 8px 20px 14px;
+    font-size: .82rem;
+    color: var(--muted);
+  }
+  /* Modal */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,.45);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 14px;
+    width: min(520px, 100%);
+    max-height: 90vh;
+    overflow: auto;
+    box-shadow: 0 20px 50px rgba(0,0,0,.2);
+    padding: 18px 18px 16px;
+  }
+  .modal h2 { margin: 0 0 12px; font-size: 1.15rem; }
+  .modal .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .modal textarea {
+    width: 100%;
+    min-height: 220px;
+    font-family: Consolas, monospace;
+    font-size: .88rem;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    resize: vertical;
+  }
+  .modal .actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #0f172a;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: .88rem;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { flex-direction: row; flex-wrap: wrap; padding: 8px 12px; }
+    .side-card { flex: 1 1 160px; }
+    .panels { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Domain Cart Checker</h1>
+    <span class="badge">Vercel Edition</span>
+  </header>
+
+  <aside class="sidebar">
+    <div class="side-card">
+      <h2>Thao tác</h2>
+      <label class="field">Mention</label>
+      <select id="mentionSelect">
+        <option value="@Pii_S8_003">@Pii_S8_003</option>
+        <option value="@bee_s8_01">@bee_s8_01</option>
+        <option value="__custom__">Custom...</option>
+      </select>
+      <input type="text" id="customMention" placeholder="@custom..." disabled />
+      <button class="btn btn-violet" data-cmd="step1">🔍 Lọc</button>
+      <button class="btn btn-green" data-cmd="1">💡 Đề xuất</button>
+      <button class="btn btn-orange" data-cmd="lechgia">⚠️ Lệch giá</button>
+      <button class="btn btn-red" id="btnClear">🗑️ Xóa tất cả</button>
+      <button class="btn btn-slate" id="btnBanned">⚙ Đuôi cấm</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-head">Danh sách gốc (Input)</div>
+        <textarea id="original" placeholder="Dán danh sách gốc (NAMECHEAP / DYNADOT / … + DM-xxx)…" spellcheck="false"></textarea>
+      </div>
+      <div class="panel">
+        <div class="panel-head">Cart (từ Tampermonkey)</div>
+        <textarea id="cart" placeholder="Dán nội dung cart từ nhà cung cấp…" spellcheck="false"></textarea>
+      </div>
+    </div>
+
+    <div class="check-card" id="checkPanel">
+      <h3>Kết quả Đối soát <span style="font-weight:500;color:var(--muted);font-size:.85rem">(click domain để copy)</span></h3>
+      <div class="row">
+        <div class="label">Nhà cung cấp:</div>
+        <div class="value" id="provValue">— <span class="icon" id="provIcon"></span></div>
+      </div>
+      <div class="row">
+        <div class="label">Danh sách:</div>
+        <div class="value" id="listValue">— <span class="icon" id="listIcon"></span></div>
+      </div>
+      <div class="row">
+        <div class="label">Đuôi cấm:</div>
+        <div class="value" id="bannedValue">— <span class="icon" id="bannedIcon"></span></div>
+      </div>
+      <div class="row">
+        <div class="label">Cảnh báo:</div>
+        <div class="value" id="warnValue">— <span class="icon" id="warnIcon"></span></div>
+      </div>
+      <div class="warn-line" id="warnLine"></div>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-head">
+        <span>Kết quả (Lọc domain / Đề xuất / DS import)</span>
+        <button class="btn btn-sm btn-sky" id="btnCopy">📋 Copy kết quả</button>
+        <button class="btn btn-sm btn-violet" id="btnBeast" style="display:none" title="Mở Beast Mode với các domain vừa lọc">🦁 Beast Mode</button>
+      </div>
+      <textarea id="result" placeholder="Kết quả sẽ hiện ở đây…" spellcheck="false"></textarea>
+    </div>
+  </main>
+
+  <footer id="status">Sẵn sàng · Hotkey: <b>1</b> = Đề xuất · <b>2</b> = DS import · <b>Esc×3</b> = Xóa tất cả</footer>
+</div>
+
+<!-- Banned TLD Modal -->
+<div class="modal-backdrop" id="bannedModal">
+  <div class="modal">
+    <h2>Quản lý đuôi cấm</h2>
+    <p style="font-size:0.85rem;color:var(--err);margin-top:-5px;margin-bottom:10px;">Lưu ý: Chế độ Vercel chỉ cho phép <strong>xem</strong> danh sách cấm từ kho chứa GitHub (domain-checker-forSEO-Ares). Không thể lưu trực tiếp từ giao diện này.</p>
+    <div class="toolbar">
+      <label class="field">Nhóm</label>
+      <select id="banCat" style="width:140px">
+        <option value="common">common</option>
+        <option value="godaddy">godaddy</option>
+        <option value="dynadot">dynadot</option>
+        <option value="spaceship">spaceship</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:.9rem;margin-left:8px">
+        <input type="checkbox" id="ukPure" disabled /> Cấm .uk thuần
+      </label>
+    </div>
+    <textarea id="banList" spellcheck="false" disabled></textarea>
+    <div class="toolbar" style="margin-top:10px">
+      <input type="text" id="banEntry" placeholder=".example" style="width:160px" disabled />
+      <button class="btn btn-sm btn-green" id="banAdd" disabled>Thêm</button>
+      <button class="btn btn-sm btn-red" id="banRemove" disabled>Xóa dòng đang chọn</button>
+    </div>
+    <div class="actions">
+      <button class="btn btn-sm btn-slate" id="banReset" disabled>Đặt lại mặc định</button>
+      <button class="btn btn-sm btn-sky" id="banClose">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+function getMention() {
+  const v = $("#mentionSelect").value;
+  if (v === "__custom__") {
+    return ($("#customMention").value || "").trim() || "@Pii_S8_003";
+  }
+  return v;
+}
+
+$("#mentionSelect").addEventListener("change", () => {
+  const custom = $("#customMention");
+  if ($("#mentionSelect").value === "__custom__") {
+    custom.disabled = false;
+    custom.focus();
+  } else {
+    custom.disabled = true;
+    custom.value = "";
+  }
+});
+
+function chipHtml(domains) {
+  if (!domains || !domains.length) return "";
+  return `<div class="chips">${domains.map(d =>
+    `<span class="chip" data-d="${escapeAttr(d)}">${escapeHtml(d)}</span>`
+  ).join("")}</div>`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function escapeAttr(s) {
+  return String(s).replace(/"/g, "&quot;");
+}
+
+function bindChips(root) {
+  root.querySelectorAll(".chip").forEach(el => {
+    el.addEventListener("click", async () => {
+      const d = el.dataset.d;
+      try {
+        await navigator.clipboard.writeText(d);
+        el.classList.add("copied");
+        el.textContent = "✓ " + d;
+        toast("Đã copy: " + d);
+        setTimeout(() => {
+          el.classList.remove("copied");
+          el.textContent = d;
+        }, 900);
+      } catch (e) {
+        toast("Không copy được");
+      }
+    });
+  });
+}
+
+function resetCheckPanel() {
+  $("#provValue").innerHTML = "— <span class=\"icon\" id=\"provIcon\"></span>";
+  $("#listValue").innerHTML = "— <span class=\"icon\" id=\"listIcon\"></span>";
+  $("#bannedValue").innerHTML = "— <span class=\"icon\" id=\"bannedIcon\"></span>";
+  $("#warnValue").innerHTML = "— <span class=\"icon\" id=\"warnIcon\"></span>";
+  $("#warnLine").textContent = "";
+}
+
+function setInlineIcon(valueId, iconId, text, iconChar, iconClass) {
+  const el = $("#" + valueId);
+  el.innerHTML = escapeHtml(text) + ` <span class="icon ${iconClass}" id="${iconId}">${iconChar}</span>`;
+}
+
+function renderSummary(s) {
+  if (!s) {
+    resetCheckPanel();
+    return;
+  }
+  setInlineIcon("provValue", "provIcon", s.provider || "—", "✔", "ok");
+
+  if (s.list_ok) {
+    setInlineIcon("listValue", "listIcon", "Khớp hoàn toàn", "✔", "ok");
+  } else {
+    let html = "";
+    if (s.missing && s.missing.length) {
+      html += `<span style="margin-right:4px">Thiếu:</span>${chipHtml(s.missing)}`;
+      if (s.missing.length > 1) {
+        html += ` <button type="button" class="btn-copy-missing" id="btnCopyMissing" title="Copy tất cả domain thiếu (mỗi domain 1 dòng)">📋 Copy thiếu</button>`;
+      }
+    }
+    if (s.extra && s.extra.length) {
+      if (html) html += `<span style="margin:0 6px">|</span>`;
+      html += `<span style="margin-right:4px">Thừa:</span>${chipHtml(s.extra)}`;
+    }
+    $("#listValue").innerHTML = (html || "—") + ` <span class="icon err" id="listIcon">✘</span>`;
+    bindChips($("#listValue"));
+    const btnMiss = $("#btnCopyMissing");
+    if (btnMiss && s.missing && s.missing.length > 1) {
+      btnMiss.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const text = s.missing.join("\n");
+        try {
+          await navigator.clipboard.writeText(text);
+          btnMiss.textContent = "✓ Đã copy";
+          toast("Đã copy " + s.missing.length + " domain thiếu");
+          setTimeout(() => { btnMiss.textContent = "📋 Copy thiếu"; }, 1200);
+        } catch (err) {
+          toast("Không copy được");
+        }
+      });
+    }
+  }
+
+  if (s.banned_ok) {
+    setInlineIcon("bannedValue", "bannedIcon", "Không có", "✔", "ok");
+  } else {
+    $("#bannedValue").innerHTML = `<span style="margin-right:4px">Phát hiện:</span>${chipHtml(s.banned)} <span class="icon err" id="bannedIcon">✘</span>`;
+    bindChips($("#bannedValue"));
+  }
+
+  const msgs = [];
+  const parts = [];
+  if (s.extra && s.extra.length) {
+    parts.push(`<span style="margin-right:4px">Domain lạ:</span>${chipHtml(s.extra)}`);
+    msgs.push("Domain lạ: " + s.extra.join(", "));
+  }
+  if (s.price_zero && s.price_zero.length) {
+    parts.push(`<span style="margin-right:4px">Giá = 0:</span>${chipHtml(s.price_zero)}`);
+    msgs.push("Giá = 0: " + s.price_zero.join(", "));
+  }
+  if (s.price_high && s.price_high.length) {
+    parts.push(`<span style="margin-right:4px">Giá cao:</span>${chipHtml(s.price_high)}`);
+    msgs.push("Giá cao: " + s.price_high.join(", "));
+  }
+  if (s.price_diff && s.price_diff.length) {
+    const ds = s.price_diff.map(x => x.domain);
+    parts.push(`<span style="margin-right:4px">Chênh giá:</span>${chipHtml(ds)}`);
+    msgs.push(
+      "Chênh giá: " +
+      s.price_diff.map(x => `${x.domain} (gốc ${x.orig} → cart ${x.cart} ${x.unit})`).join(", ")
+    );
+  }
+
+  if (parts.length) {
+    $("#warnValue").innerHTML = parts.join(`<span style="margin:0 6px">|</span>`) + ` <span class="icon warn" id="warnIcon">⚠</span>`;
+    bindChips($("#warnValue"));
+    $("#warnLine").textContent = "⚠  " + msgs.join("  •  ");
+  } else {
+    setInlineIcon("warnValue", "warnIcon", "Không có", "✔", "ok");
+    $("#warnLine").textContent = "";
+  }
+}
+
+let lastFilteredDomains = [];
+let lastProvider = "";
+
+function updateBeastButton(provider, domains) {
+  const btn = $("#btnBeast");
+  const p = (provider || "").toUpperCase();
+  if ((p === "NAMECHEAP" || p === "SAV") && domains && domains.length) {
+    lastFilteredDomains = domains;
+    lastProvider = p;
+    btn.style.display = "inline-flex";
+    btn.title = p === "SAV"
+      ? "Mở SAV (mỗi domain 1 tab) với các domain vừa lọc"
+      : "Mở Namecheap Beast Mode với các domain vừa lọc";
+  } else {
+    lastFilteredDomains = [];
+    lastProvider = "";
+    btn.style.display = "none";
+  }
+}
+
+async function run(cmd) {
+  const original = $("#original").value.trim();
+  const cart = $("#cart").value.trim();
+
+  if (cmd === "step1") {
+    if (!original) {
+      toast("Vui lòng dán Danh sách gốc");
+      return;
+    }
+  } else if (!original || !cart) {
+    toast("Vui lòng dán cả Danh sách gốc và Cart");
+    return;
+  }
+
+  $("#status").textContent = "Đang xử lý…";
+  try {
+    const res = await fetch("/api/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        original,
+        cart,
+        command: cmd,
+        mention: getMention(),
+      }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      toast(data.error);
+      $("#status").textContent = "Lỗi xử lý";
+      return;
+    }
+    $("#result").value = data.result || "";
+    if (data.summary) renderSummary(data.summary);
+    else if (cmd === "step1") resetCheckPanel();
+
+    if (cmd === "step1") {
+      updateBeastButton(data.provider || "", data.domains || []);
+    }
+
+    if ((cmd === "1" || cmd === "2") && data.ds_import) {
+      try {
+        const payload = { text: data.ds_import, ts: Date.now() };
+        localStorage.setItem("s8_smart_note_import_fill", JSON.stringify(payload));
+        window.dispatchEvent(
+          new CustomEvent("s8-fill-import", { detail: payload })
+        );
+        toast("Đã gửi DS import vào Smart Note (IMPORT)");
+      } catch (err) {
+        console.warn("Fill Smart Note failed", err);
+      }
+    }
+
+    const labels = {
+      step1: "Đã lọc domain (Bước 1)",
+      step2: "Đã đối soát xong",
+      "1": "Đã xử lý · Lệnh 1 (Đề xuất)",
+      "2": "Đã xử lý · Lệnh 2 (DS import)",
+      lechgia: "Đã lọc domain lệch giá (>20$ / 460k)",
+    };
+    $("#status").textContent = labels[cmd] || "Xong";
+  } catch (e) {
+    toast("Lỗi kết nối server");
+    $("#status").textContent = "Lỗi kết nối";
+  }
+}
+
+$$("[data-cmd]").forEach(btn => {
+  btn.addEventListener("click", () => run(btn.dataset.cmd));
+});
+
+function clearAll() {
+  $("#original").value = "";
+  $("#cart").value = "";
+  $("#result").value = "";
+  resetCheckPanel();
+  updateBeastButton("", []);
+  $("#status").textContent = "Đã xóa tất cả · Hotkey: 1 = Đề xuất · 2 = DS import · Esc×3 = Xóa";
+  toast("Đã xóa tất cả");
+}
+
+$("#btnClear").addEventListener("click", clearAll);
+
+$("#btnCopy").addEventListener("click", async () => {
+  const text = $("#result").value.trim();
+  if (!text) {
+    toast("Không có nội dung để copy");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("Đã copy kết quả ✓");
+    $("#status").textContent = "Đã copy kết quả vào clipboard ✓";
+  } catch (e) {
+    toast("Không copy được");
+  }
+});
+
+$("#btnBeast").addEventListener("click", () => {
+  if (!lastFilteredDomains.length) {
+    toast("Chưa có domain để mở Beast Mode");
+    return;
+  }
+  const p = (lastProvider || "").toUpperCase();
+  if (p === "SAV") {
+    const domains = lastFilteredDomains.slice();
+    const total = domains.length;
+    let opened = 0;
+    let blocked = 0;
+
+    function openOne(idx) {
+      if (idx >= total) {
+        if (blocked > 0) {
+          toast("SAV: mở " + opened + "/" + total + " tab · " + blocked + " bị chặn — cho phép popup cho localhost");
+        } else {
+          toast("Đã mở SAV · " + opened + " tab (mỗi domain 1 tab)");
+        }
+        return;
+      }
+      const url = `https://v2.sav.com/domain?search=${encodeURIComponent(domains[idx])}`;
+      const w = window.open(url, "_blank");
+      if (w) opened += 1;
+      else blocked += 1;
+      if (idx === 0 && total > 1) {
+        toast("Đang mở tab SAV 1/" + total + "…");
+      }
+      setTimeout(() => openOne(idx + 1), 500);
+    }
+    openOne(0);
+  } else {
+    const joined = lastFilteredDomains.map(d => encodeURIComponent(d)).join("%09");
+    const url = `https://www.namecheap.com/domains/registration/results/?domain=${joined}&type=beast`;
+    window.open(url, "_blank");
+    toast("Đã mở Namecheap Beast Mode (" + lastFilteredDomains.length + " domain)");
+  }
+});
+
+function isTyping() {
+  const el = document.activeElement;
+  return el && (el.tagName === "TEXTAREA" || el.tagName === "INPUT" || el.isContentEditable);
+}
+let escCount = 0;
+let escTimer = null;
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    escCount += 1;
+    if (escTimer) clearTimeout(escTimer);
+    escTimer = setTimeout(() => { escCount = 0; }, 800);
+    if (escCount >= 3) {
+      escCount = 0;
+      if (escTimer) clearTimeout(escTimer);
+      clearAll();
+    }
+    return;
+  }
+  if (isTyping()) return;
+  if (e.key === "1") { e.preventDefault(); run("1"); }
+  if (e.key === "2") { e.preventDefault(); run("2"); }
+});
+
+// ---- Banned TLD modal ----
+async function loadBanned() {
+  const res = await fetch("/api/banned");
+  return res.json();
+}
+
+let banState = null;
+
+async function openBannedModal() {
+  try {
+    banState = await loadBanned();
+    $("#ukPure").checked = !!banState.uk_pure_banned;
+    $("#banCat").value = "common";
+    refreshBanList();
+    $("#bannedModal").classList.add("open");
+  } catch(e) {
+    toast("Không lấy được danh sách cấm từ GitHub");
+  }
+}
+
+function refreshBanList() {
+  if(!banState) return;
+  const cat = $("#banCat").value;
+  const list = (banState.banned_tlds[cat] || []).slice().sort();
+  $("#banList").value = list.length ? list.join("\n") : "";
+}
+
+$("#banCat").addEventListener("change", refreshBanList);
+
+$("#banClose").addEventListener("click", () => {
+  $("#bannedModal").classList.remove("open");
+});
+$("#bannedModal").addEventListener("click", (e) => {
+  if (e.target === $("#bannedModal")) $("#bannedModal").classList.remove("open");
+});
+$("#btnBanned").addEventListener("click", openBannedModal);
+</script>
+</body>
+</html>
