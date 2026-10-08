@@ -15,8 +15,9 @@ def catch_all(path):
     if request.method == 'OPTIONS':
         return '', 204
 
+    actual_path = request.path.lower()
+
     if request.method == 'POST':
-        # Phân loại dựa trên payload (vì Vercel rewrite có thể làm mất đường dẫn gốc)
         data = request.get_json(silent=True) or {}
         if 'command' in data:
             return handle_run(data)
@@ -24,7 +25,17 @@ def catch_all(path):
             return jsonify({"error": "Chế độ Vercel không cho phép lưu thay đổi cấu hình. Vui lòng sửa trực tiếp file banned_tlds.json trên kho lưu trữ GitHub."}), 403
 
     if request.method == 'GET':
-        return handle_banned_get()
+        # Phân biệt route tĩnh (đề phòng Vercel forward root path vào Flask)
+        if 'banned' in actual_path or path.endswith('banned'):
+            return handle_banned_get()
+        else:
+            # Phục vụ file giao diện index.html
+            html_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'index.html')
+            try:
+                with open(html_path, 'r', encoding='utf-8') as f:
+                    return f.read(), 200, {'Content-Type': 'text/html; charset=utf-8'}
+            except Exception as e:
+                return jsonify({"error": "Cannot load index.html"}), 500
 
     return jsonify({"error": "Method not allowed"}), 405
 
