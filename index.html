@@ -772,7 +772,7 @@ document.addEventListener("keydown", (e) => {
 
 // ---- Banned TLD modal ----
 async function loadBanned() {
-  const res = await fetch("/api/banned");
+  const res = await fetch(`/api/banned${force ? "?force=1" : ""}`);
   return res.json();
 }
 
@@ -825,5 +825,53 @@ $("#bannedModal").addEventListener("click", (e) => {
 });
 $("#btnBanned").addEventListener("click", openBannedModal);
 </script>
+
+<!-- MongoDB Rules Modal -->
+<div class="modal-backdrop" id="rulesModal">
+  <div class="modal" style="width: 600px; max-width: 90vw;">
+    <h2>Luật Đuôi Cấm (MongoDB Atlas)</h2>
+    <p style="font-size:0.85rem;color:var(--err);margin-top:-5px;margin-bottom:10px;">Dữ liệu này được tự động đồng bộ từ Database. Để sửa đổi, hãy dùng trang web Render.</p>
+    <textarea id="rulesOutput" spellcheck="false" disabled style="height:300px; width:100%; font-family:monospace; font-size:13px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:10px; resize:vertical;"></textarea>
+    <div class="actions" style="margin-top:15px; display:flex; justify-content:flex-end; gap:10px;">
+      <button class="btn btn-sm btn-green" id="btnRefreshRules">🔄 Cập nhật lại</button>
+      <button class="btn btn-sm btn-sky" id="btnRulesClose">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Rules modal logic
+  const rulesModal = document.getElementById('rulesModal');
+  const btnViewRules = document.getElementById('btnViewRules');
+  const btnRulesClose = document.getElementById('btnRulesClose');
+  const rulesOutput = document.getElementById('rulesOutput');
+  const btnRefreshRules = document.getElementById('btnRefreshRules');
+
+  async function loadRules(force=false) {
+    rulesOutput.value = "Đang tải dữ liệu từ MongoDB...";
+    try {
+      const res = await fetch(`/api/banned${force ? "?force=1" : ""}`);
+      const data = await res.json();
+      rulesOutput.value = JSON.stringify(data, null, 2);
+    } catch (e) {
+      rulesOutput.value = "Lỗi khi tải dữ liệu từ MongoDB!";
+    }
+  }
+
+  btnViewRules.addEventListener('click', () => {
+    rulesModal.classList.add('show');
+    loadRules();
+  });
+
+  btnRulesClose.addEventListener('click', () => {
+    rulesModal.classList.remove('show');
+  });
+  
+  btnRefreshRules.addEventListener('click', () => {
+    loadRules(true);
+    toast("Đang tải lại...");
+  });
+</script>
+
 </body>
 </html>

@@ -25,6 +25,11 @@ def catch_all(path):
             return jsonify({"error": "Chế độ Vercel không cho phép lưu thay đổi cấu hình. Vui lòng sửa trực tiếp file banned_tlds.json trên kho lưu trữ GitHub."}), 403
 
     if request.method == 'GET':
+        if 'banned' in actual_path or path.endswith('banned'):
+            from core import load_tld_rules
+            force = request.args.get('force') == '1'
+            return jsonify(load_tld_rules(force=force))
+            
         # Phục vụ file giao diện index.html
         html_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'index.html')
         try:
