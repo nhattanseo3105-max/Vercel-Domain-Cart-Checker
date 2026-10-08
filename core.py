@@ -6,52 +6,42 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 import requests
 
-GITHUB_BANNED_TLDS_URL = "https://raw.githubusercontent.com/nhattanseo3105-max/domain-checker-forSEO-Ares/main/banned_tlds.json"
-
-DEFAULT_BANNED_TLDS = {
-    "common": {".ch", ".li", ".cn", ".au", ".fr", ".ca", ".eu", ".eco"},
-    "godaddy": {".in", ".co.in", ".net.in", ".org.in", ".cz", ".nl", ".eu"},
-    "dynadot": {".it", ".org"},
-    "spaceship": {".de"},
-}
-DEFAULT_UK_PURE_BANNED = True
-
+import pymongo
 import time
+import os
 
-_cached_tlds = None
-_cached_uk = None
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://nhattanseo3105_db_user:HeSauzpD4Vn3fbfA@cluster0.lhnikju.mongodb.net/?appName=Cluster0")
+
+_cached_rules = None
 _cache_time = 0
-CACHE_TTL = 3600  # 1 hour cache (or until Vercel shuts down the instance)
+CACHE_TTL = 3600  # 1 hour cache
 
-def load_banned_tlds(force: bool = False) -> Tuple[Dict[str, Set[str]], bool]:
-    global _cached_tlds, _cached_uk, _cache_time
+def load_tld_rules(force: bool = False) -> Dict[str, Dict]:
+    global _cached_rules, _cache_time
     
-    if not force and _cached_tlds is not None and (time.time() - _cache_time) < CACHE_TTL:
-        return _cached_tlds, _cached_uk
+    if not force and _cached_rules is not None and (time.time() - _cache_time) < CACHE_TTL:
+        return _cached_rules
 
     try:
-        response = requests.get(GITHUB_BANNED_TLDS_URL, timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            tlds: Dict[str, Set[str]] = {}
-            for cat, items in data.get("banned_tlds", {}).items():
-                tlds[cat] = set(items) if isinstance(items, list) else set()
-            for cat in DEFAULT_BANNED_TLDS:
-                if cat not in tlds:
-                    tlds[cat] = set()
-            uk = bool(data.get("uk_pure_banned", DEFAULT_UK_PURE_BANNED))
+        client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        db = client['domain_checker']
+        rules = {}
+        for doc in db['tld_rules'].find():
+            prov = doc.get("registrar", "").lower()
+            if prov:
+                rules[prov] = {
+                    "banned": set(doc.get("banned", [])),
+                    "allowed": set(doc.get("allowed", [])),
+                    "keywords": doc.get("keywords", [])
+                }
             
-            _cached_tlds = tlds
-            _cached_uk = uk
-            _cache_time = time.time()
-            return tlds, uk
+        _cached_rules = rules
+        _cache_time = time.time()
+        return rules
     except Exception as e:
-        print(f"Error loading banned TLDs from GitHub: {e}")
+        print(f"Error loading TLD rules from MongoDB: {e}")
         
-    if _cached_tlds is not None:
-        return _cached_tlds, _cached_uk
-        
-    return copy.deepcopy(DEFAULT_BANNED_TLDS), DEFAULT_UK_PURE_BANNED
+    return _cached_rules or {}
 
 # ==================== DATA MODELS ====================
 @dataclass
@@ -324,21 +314,23 @@ def get_tld(domain: str) -> str:
         return "." + ".".join(parts[-2:])
     return "." + parts[-1]
 
-def is_banned(domain: str, provider: str, banned_tlds: Dict[str, Set[str]], uk_pure_banned: bool) -> bool:
+def is_banned(domain: str, provider: str, mongo_rules: Dict) -> bool:
     tld = get_tld(domain)
-    provider = provider.upper()
-    if tld in banned_tlds.get("common", set()):
+    prov = provider.lower()
+    
+    prov_rules = mongo_rules.get(prov)
+    if not prov_rules:
+        prov_rules = mongo_rules.get("namecheap", {})
+
+    banned_tlds = prov_rules.get("banned", set())
+    allowed_tlds = prov_rules.get("allowed", set())
+    
+    if tld in banned_tlds:
         return True
-    if tld == ".uk" and uk_pure_banned:
+        
+    if tld == ".uk" and ".uk" not in allowed_tlds:
         return True
-    if provider == "GODADDY" and (
-        tld.endswith(".in") or tld in banned_tlds.get("godaddy", set())
-    ):
-        return True
-    if provider == "DYNADOT" and tld in banned_tlds.get("dynadot", set()):
-        return True
-    if provider == "SPACESHIP" and tld in banned_tlds.get("spaceship", set()):
-        return True
+        
     return False
 
 def get_final_prices(cart: CartData) -> Dict[str, float]:
@@ -431,7 +423,7 @@ def prices_for_report(
     )
 
 def compare(groups: List[OrderGroup], cart: CartData) -> Dict:
-    banned_tlds, uk_pure_banned = load_banned_tlds()
+    mongo_rules = load_tld_rules()
     
     provider = cart.provider
     if provider == "UNKNOWN" and groups:
@@ -447,7 +439,7 @@ def compare(groups: List[OrderGroup], cart: CartData) -> Dict:
     matched = [d for d in all_original if d in cart_set]
     missing = [d for d in all_original if d not in cart_set]
     extra = [d for d in cart_set if d not in all_original]
-    banned = [d for d in all_original if is_banned(d, all_original[d]["provider"], banned_tlds, uk_pure_banned)]
+    banned = [d for d in all_original if is_banned(d, all_original[d]["provider"], mongo_rules)]
 
     final_prices = get_final_prices(cart)
     currency = cart.currency or "USD"

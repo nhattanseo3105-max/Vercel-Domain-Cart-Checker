@@ -4,9 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from core import process, result_summary, parse_original_list, parse_cart, compare, output_command_2, load_banned_tlds
-
-app = Flask(__name__)
+from core import process, result_summary, parse_original_list, parse_cart, compare, output_command_2, app = Flask(__name__)
 CORS(app)
 
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'OPTIONS'])
@@ -25,21 +23,13 @@ def catch_all(path):
             return jsonify({"error": "Chế độ Vercel không cho phép lưu thay đổi cấu hình. Vui lòng sửa trực tiếp file banned_tlds.json trên kho lưu trữ GitHub."}), 403
 
     if request.method == 'GET':
-        if 'banned' in actual_path or path.endswith('banned'):
-            return handle_banned()
-        else:
-            # Phục vụ file giao diện index.html
-            html_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'index.html')
-            try:
-                with open(html_path, 'r', encoding='utf-8') as f:
-                    return f.read(), 200, {'Content-Type': 'text/html; charset=utf-8'}
-            except Exception as e:
-                return jsonify({"error": "Cannot load index.html"}), 500
-
-    if request.method == 'POST' and 'banned' in actual_path:
-        if 'refresh' in actual_path:
-            return handle_banned(force_refresh=True)
-        return jsonify({"error": "Chế độ Vercel không cho phép lưu thay đổi cấu hình. Vui lòng sửa trực tiếp file banned_tlds.json trên kho lưu trữ GitHub."}), 403
+        # Phục vụ file giao diện index.html
+        html_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'index.html')
+        try:
+            with open(html_path, 'r', encoding='utf-8') as f:
+                return f.read(), 200, {'Content-Type': 'text/html; charset=utf-8'}
+        except Exception as e:
+            return jsonify({"error": "Cannot load index.html"}), 500
 
     return jsonify({"error": "Method not allowed"}), 405
 
@@ -79,18 +69,6 @@ def handle_run(data):
             "provider": provider,
             "domains": domains,
             "ds_import": ds_import,
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-def handle_banned(force_refresh=False):
-    try:
-        banned_tlds, uk_pure_banned = load_banned_tlds(force=force_refresh)
-        return jsonify({
-            "banned_tlds": {
-                k: sorted(list(v)) for k, v in banned_tlds.items()
-            },
-            "uk_pure_banned": uk_pure_banned,
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500

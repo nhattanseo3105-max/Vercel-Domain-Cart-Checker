@@ -429,36 +429,7 @@
   <footer id="status">Sẵn sàng · Hotkey: <b>1</b> = Đề xuất · <b>2</b> = DS import · <b>Esc×3</b> = Xóa tất cả</footer>
 </div>
 
-<!-- Banned TLD Modal -->
-<div class="modal-backdrop" id="bannedModal">
-  <div class="modal">
-    <h2>Quản lý đuôi cấm</h2>
-    <p style="font-size:0.85rem;color:var(--err);margin-top:-5px;margin-bottom:10px;">Lưu ý: Chế độ Vercel chỉ cho phép <strong>xem</strong> danh sách cấm từ kho chứa GitHub (domain-checker-forSEO-Ares). Không thể lưu trực tiếp từ giao diện này.</p>
-    <div class="toolbar">
-      <label class="field">Nhóm</label>
-      <select id="banCat" style="width:140px">
-        <option value="common">common</option>
-        <option value="godaddy">godaddy</option>
-        <option value="dynadot">dynadot</option>
-        <option value="spaceship">spaceship</option>
-      </select>
-      <label style="display:flex;align-items:center;gap:6px;font-size:.9rem;margin-left:8px">
-        <input type="checkbox" id="ukPure" disabled /> Cấm .uk thuần
-      </label>
-    </div>
-    <textarea id="banList" spellcheck="false" disabled></textarea>
-    <div class="toolbar" style="margin-top:10px">
-      <input type="text" id="banEntry" placeholder=".example" style="width:160px" disabled />
-      <button class="btn btn-sm btn-green" id="banAdd" disabled>Thêm</button>
-      <button class="btn btn-sm btn-red" id="banRemove" disabled>Xóa dòng đang chọn</button>
-    </div>
-    <div class="actions">
-      <button class="btn btn-sm btn-green" id="banRefresh" style="background-color:#10b981; margin-right:8px;">🔄 Tải lại từ GitHub</button>
-      <button class="btn btn-sm btn-slate" id="banReset" disabled>Đặt lại mặc định</button>
-      <button class="btn btn-sm btn-sky" id="banClose">Đóng</button>
-    </div>
-  </div>
-</div>
+
 
 <div class="toast" id="toast"></div>
 
